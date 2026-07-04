@@ -1,0 +1,15 @@
+bin/
+obj/
+target/
+Library/
+.venv/
+frontend/node_modules/
+*.log
+*.sqlite
+
+*.png
+*.jpg
+frontend/assets/
+
+backend/alembic
+*/__pycache__
