@@ -3,13 +3,12 @@ import { User, ShieldAlert, ChevronDown, LogOut, LogIn } from "lucide-react";
 import { getUserProfile } from "@/client";
 import Image from "next/image";
 import { setupServerApiClient } from "@/lib/api-server";
-import { cookies } from "next/headers";
-import 'lib/api-client';
+import LogoutButton from "./LogoutButton";
 import { getFastApiError } from "@/lib/utils";
+import { avatarUrl } from "@/lib/skin";
 
 async function getUser() {
   try {
-    // Настраиваем наш API-клиент (он прикрепит куки к запросу)
     setupServerApiClient();
     
     const { data, error, response } = await getUserProfile();
@@ -36,14 +35,14 @@ export default async function UserMenu() {
     ) : (
     <div className="relative group/user">
       <button className="flex items-center gap-2 text-zinc-300 hover:text-white transition-colors border border-zinc-800 hover:border-zinc-700 bg-zinc-900/50 rounded-2xl pl-1.5 pr-3 py-1.5">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <Image 
-            src={"/api/v1/skin/avatar?name=" + user.username}
+        <Image
+            src={avatarUrl(user.username)}
             alt="Player Skin"
-            width={32} 
-            height={32} 
+            width={32}
+            height={32}
             className="relative rounded-2xl border-zinc-800 transition-colors rendering-pixelated"
             referrerPolicy="no-referrer"
+            unoptimized
             />
         <span className="text-sm font-bold">{user.username}</span>
         <ChevronDown className="w-4 h-4 text-zinc-500 group-hover/user:text-white transition-colors" />
@@ -60,10 +59,10 @@ export default async function UserMenu() {
             Админ-панель
           </Link>
           <div className="h-px bg-zinc-800 my-1"></div>
-          <button className="w-full flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-zinc-400 hover:text-white hover:bg-zinc-800/80 transition-colors">
+          <LogoutButton className="w-full flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-zinc-400 hover:text-white hover:bg-zinc-800/80 transition-colors">
             <LogOut className="w-4 h-4" />
             Выйти
-          </button>
+          </LogoutButton>
         </div>
       </div>
     </div>

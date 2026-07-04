@@ -1,9 +1,9 @@
 import type { Metadata } from 'next';
-import { Inter, Space_Grotesk, Geist } from 'next/font/google';
+import { Space_Grotesk, Geist } from 'next/font/google';
 import './globals.css';
 import Navbar from '@/components/Navbar';
-import { MessageBar } from '@/components/MessageBar';
-import ClientAuth from '@/components/ClientAuth';
+import HomeMessageBar from '@/components/HomeMessageBar';
+import { QueryProvider } from '@/providers/QueryProvider';
 import { cn } from "@/lib/utils";
 
 const geist = Geist({subsets:['latin'],variable:'--font-sans'});
@@ -21,18 +21,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="ru" className={cn("scroll-smooth", space.variable, "font-sans", geist.variable)}>
       <body className="bg-zinc-950 text-zinc-50 font-sans antialiased selection:bg-green-500/30 selection:text-green-200" suppressHydrationWarning>
-        <div className="flex flex-col min-h-screen">
-          <Navbar />
-          <ClientAuth />
-          {/* if page is home page then show message bar */}
-          {typeof window !== 'undefined' && window.location.pathname === "/" && <MessageBar />}
-          <main className="flex-grow">
-            {children}
-          </main>
-          <footer className="py-8 text-center text-zinc-500 text-sm border-t border-white/5">
-            <p>&copy; {new Date().getFullYear()} FloppaLand. Все права защищены.</p>
-          </footer>
-        </div>
+        <QueryProvider>
+          <div className="flex flex-col min-h-screen">
+            <Navbar />
+            <HomeMessageBar />
+            <main className="flex-grow">
+              {children}
+            </main>
+            <footer className="py-8 text-center text-zinc-500 text-sm border-t border-white/5">
+              <p>&copy; {new Date().getFullYear()} FloppaLand. Все права защищены.</p>
+            </footer>
+          </div>
+        </QueryProvider>
       </body>
     </html>
   );

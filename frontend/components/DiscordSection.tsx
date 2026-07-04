@@ -67,7 +67,6 @@ export default function DiscordSection() {
                     src={`https://discord.com/widget?id=${CONFIG.discord.serverId}&theme=dark`}
                     width="100%"
                     height="100%"
-                    allowtransparency="true"
                     sandbox="allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts"
                     className="rounded-xl"
                   ></iframe>

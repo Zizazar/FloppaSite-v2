@@ -3,12 +3,11 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { UserPlus, User, Key, Mail, AlertCircle, Loader2 } from "lucide-react";
-import { register as apiRegister, register } from "@/client";
-import { client } from "@/client/client.gen";
+import { User, Key, AlertCircle, Loader2 } from "lucide-react";
 import Image from "next/image";
 import mainLogo from "@/assets/FloppaLandLogo.png";
 import { getFastApiError } from "@/lib/utils";
+import { useRegister } from "@/hooks/use-api";
 
 
 export default function RegisterPage() {
@@ -17,31 +16,28 @@ export default function RegisterPage() {
   const [password, setPassword] = useState("");
   const [passwordConfirm, setPasswordConfirm] = useState("");
   const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const { mutate: doRegister, isPending: isLoading } = useRegister();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!username || !password || !passwordConfirm) return;
-    
+
     if (password !== passwordConfirm) {
       setError("Пароли не совпадают");
       return;
     }
-    
-    setIsLoading(true);
-    setError("");
-    
-    const { error } = await register({ 
-            body: { username, password }
-          });
-    if (error) {
-      setError(getFastApiError(error)); 
-    } else {
-      router.push("/profile");
-      router.refresh()
-    }
-    setIsLoading(false);
 
+    setError("");
+    doRegister(
+      { username, password },
+      {
+        onSuccess: () => {
+          router.push("/profile");
+          router.refresh();
+        },
+        onError: (err) => setError(getFastApiError(err)),
+      }
+    );
   };
 
   return (

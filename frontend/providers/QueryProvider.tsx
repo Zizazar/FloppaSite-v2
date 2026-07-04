@@ -2,6 +2,8 @@
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useState } from 'react';
+// Побочный импорт: конфигурирует браузерный клиент hey-api (baseUrl + credentials).
+import '@/lib/api-client';
 
 export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [queryClient] = useState(() => new QueryClient({

@@ -1,176 +1,148 @@
-// Индустриальный подход: typed hooks для всех API операций
 'use client';
 
-import { useQuery, useMutation, useQueryClient, type QueryKey } from '@tanstack/react-query';
-import { useClient } from '@hey-api/client-next';
-import type { Options } from '@hey-api/client-next';
+// Типизированные хуки поверх сгенерированного SDK (@/client).
+// Аутентификация — через HttpOnly-куку access_token (см. lib/api-client.ts),
+// поэтому здесь НЕТ работы с токенами/localStorage: куки прикрепляются браузером
+// автоматически к запросам на /api/* (проксируются на бэкенд в next.config.ts).
+
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  getUserProfile,
-  changeUsername,
   changePassword,
+  changeUsername,
   getUser,
+  getUserProfile,
   listUsers,
-  healthCheckGet,
   login,
+  logout,
   register,
   uploadSkin,
-  getSkinByName,
-  getSkinByUuid,
-} from '../client/sdk.gen';
+} from '@/client';
 import type {
-  GetUserProfileData,
-  ChangeUsernameData,
-  ChangeUsernameError,
-  ChangePasswordData,
-  ChangePasswordError,
-  GetUserData,
-  DeleteUserData,
-  ListUsersData,
-  LoginData,
-  RegisterData,
-  UploadSkinData,
-  GetSkinByNameData,
-  GetSkinByUuidData,
-} from '../client/types.gen';
+  ChangePasswordRequest,
+  LoginRequest,
+  RegisterRequest,
+  UserResponse,
+} from '@/client';
 
-// Query keys factory
+// ---------------------------------------------------------------------------
+// Query keys — единая фабрика ключей кэша
+// ---------------------------------------------------------------------------
 export const apiKeys = {
   profile: () => ['profile'] as const,
-  user: (id: string) => ['user', id] as const,
   users: () => ['users'] as const,
-  health: () => ['health'] as const,
-  skin: (by: 'name' | 'uuid', value: string) => ['skin', by, value] as const,
+  user: (id: number) => ['user', id] as const,
 };
 
-// Хук для профиля
-export const useProfile = () => {
-  return useQuery({
+// ---------------------------------------------------------------------------
+// Queries
+// ---------------------------------------------------------------------------
+
+/** Текущий авторизованный пользователь (GET /user/me). */
+export const useCurrentUser = () =>
+  useQuery({
     queryKey: apiKeys.profile(),
-    queryFn: () => getUserProfile({}),
-    staleTime: 1000 * 60 * 5, // 5 мин
+    queryFn: async (): Promise<UserResponse> => {
+      const { data } = await getUserProfile({ throwOnError: true });
+      return data;
+    },
+    staleTime: 1000 * 60 * 5,
+    retry: false, // 401 не имеет смысла ретраить
   });
-};
 
-// Хук для списка пользователей
-export const useUsers = () => {
-  return useQuery({
+/** Список пользователей (для админки). */
+export const useUsers = () =>
+  useQuery({
     queryKey: apiKeys.users(),
-    queryFn: () => listUsers({}),
+    queryFn: async () => {
+      const { data } = await listUsers({ throwOnError: true });
+      return data;
+    },
     staleTime: 1000 * 60 * 2,
   });
-};
 
-// Хук для отдельного пользователя
-export const useUser = (id: string) => {
-  return useQuery({
-    queryKey: apiKeys.user(id),
-    queryFn: () => getUser({ path: { user_id: id } }),
-    enabled: !!id,
-  });
-};
-
-// Хук для health check
-export const useHealthCheck = () => {
-  return useQuery({
-    queryKey: apiKeys.health(),
-    queryFn: () => healthCheckGet({}),
-    refetchInterval: 30000,
-    retry: 3,
-  });
-};
-
-// Хук для скина по имени
-export const useSkinByName = (username: string, enabled = true) => {
-  return useQuery({
-    queryKey: apiKeys.skin('name', username),
-    queryFn: () => getSkinByName({ path: { username } }),
-    enabled: enabled && !!username,
-    staleTime: 1000 * 60 * 10,
-  });
-};
-
-// Хук для скина по UUID
-export const useSkinByUuid = (uuid: string, enabled = true) => {
-  return useQuery({
-    queryKey: apiKeys.skin('uuid', uuid),
-    queryFn: () => getSkinByUuid({ path: { uuid } }),
-    enabled: enabled && !!uuid,
-    staleTime: 1000 * 60 * 10,
-  });
-};
-
-// Мутация: обновление имени пользователя
-export const useChangeUsername = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (data: { username: string }) =>
-      changeUsername({ body: { username: data.username } }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: apiKeys.profile() });
-      queryClient.invalidateQueries({ queryKey: apiKeys.users() });
-    },
-  });
-};
-
-// Мутация: обновление пароля
-export const useChangePassword = () => {
-  return useMutation({
-    mutationFn: (data: { currentPassword: string; newPassword: string }) =>
-      changePassword({ body: data }),
-  });
-};
-
-// Мутация: вход
-export const useLogin = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (data: LoginData) => login({ body: data }),
-    onSuccess: (data) => {
-      if (data.data?.access_token) {
-        localStorage.setItem('auth_token', data.data.access_token);
-        queryClient.invalidateQueries();
-      }
-    },
-  });
-};
-
-// Мутация: регистрация
-export const useRegister = () => {
-  return useMutation({
-    mutationFn: (data: RegisterData) => register({ body: data }),
-  });
-};
-
-// Мутация: загрузка скина
-export const useUploadSkin = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (data: FormData) =>
-      uploadSkin({ body: { file: data.get('file') as File } }),
-    onSuccess: (_, variables) => {
-      // Инвалидируем связанные запросы
-      queryClient.invalidateQueries();
-    },
-  });
-};
-
-// Универсальный хук для кастомных запросов с клиентом
-export const useApiClient = <TData, TResponse, TError>(
-  operation: (options: Options<TData>) => Promise<{ data?: TResponse }>,
-  key: QueryKey,
-  options?: Parameters<typeof useQuery>[1]
-) => {
-  const { client } = useClient();
-
-  return useQuery({
-    queryKey: key,
+/** Один пользователь по id. */
+export const useUserById = (userId: number, enabled = true) =>
+  useQuery({
+    queryKey: apiKeys.user(userId),
     queryFn: async () => {
-      const result = await operation({});
-      return result.data as TResponse | undefined;
+      const { data } = await getUser({ path: { user_id: userId }, throwOnError: true });
+      return data;
     },
-    ...options,
+    enabled: enabled && Number.isFinite(userId),
+  });
+
+// ---------------------------------------------------------------------------
+// Auth mutations
+// ---------------------------------------------------------------------------
+
+/** Вход. Бэкенд ставит HttpOnly-куку, поэтому токен здесь не сохраняем. */
+export const useLogin = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (body: LoginRequest) => {
+      const { data } = await login({ body, throwOnError: true });
+      return data;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: apiKeys.profile() }),
+  });
+};
+
+/** Регистрация. */
+export const useRegister = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (body: RegisterRequest) => {
+      const { data } = await register({ body, throwOnError: true });
+      return data;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: apiKeys.profile() }),
+  });
+};
+
+/** Выход. Бэкенд удаляет куку; чистим весь кэш. */
+export const useLogout = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      await logout({ throwOnError: true });
+    },
+    onSuccess: () => qc.clear(),
+  });
+};
+
+// ---------------------------------------------------------------------------
+// Profile mutations
+// ---------------------------------------------------------------------------
+
+export const useChangeUsername = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (username: string) => {
+      const { data } = await changeUsername({ query: { username }, throwOnError: true });
+      return data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: apiKeys.profile() });
+      qc.invalidateQueries({ queryKey: apiKeys.users() });
+    },
+  });
+};
+
+export const useChangePassword = () =>
+  useMutation({
+    mutationFn: async (body: ChangePasswordRequest) => {
+      const { data } = await changePassword({ body, throwOnError: true });
+      return data;
+    },
+  });
+
+export const useUploadSkin = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (file: Blob | File) => {
+      const { data } = await uploadSkin({ body: { file }, throwOnError: true });
+      return data;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: apiKeys.profile() }),
   });
 };

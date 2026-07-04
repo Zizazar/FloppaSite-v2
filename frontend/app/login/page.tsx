@@ -3,12 +3,11 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { LogIn, Key, AlertCircle, Loader2, User } from "lucide-react";
-import { login as apiLogin } from "@/client";
-import { client } from "@/client/client.gen";
+import { Key, AlertCircle, Loader2, User } from "lucide-react";
 import Image from "next/image";
 import mainLogo from "@/assets/FloppaLandLogo.png";
 import { getFastApiError } from "@/lib/utils";
+import { useLogin } from "@/hooks/use-api";
 
 
 export default function LoginPage() {
@@ -16,24 +15,23 @@ export default function LoginPage() {
   const [login, setLogin] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const { mutate: doLogin, isPending: isLoading } = useLogin();
 
-  const handleSubmit = async (e: React.SubmitEvent) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!login || !password) return;
-    
-    setIsLoading(true);
+
     setError("");
-    const { error } = await apiLogin({ 
-        body: { username: login, password }
-      });
-      if (error) {
-        setError(getFastApiError(error)); 
-      } else {
-      router.push("/profile");
-      router.refresh()
+    doLogin(
+      { username: login, password },
+      {
+        onSuccess: () => {
+          router.push("/profile");
+          router.refresh();
+        },
+        onError: (err) => setError(getFastApiError(err)),
       }
-      setIsLoading(false);
+    );
   };
 
   return (
