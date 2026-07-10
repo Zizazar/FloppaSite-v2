@@ -1,5 +1,6 @@
 import { client } from '@/client/client.gen';
 import { cookies } from 'next/headers';
+import { CONFIG } from './config';
 
 let interceptorRegistered = false;
 
@@ -7,7 +8,7 @@ let interceptorRegistered = false;
 // проксирует запросы на бэкенд и прикрепляет куки входящего запроса.
 export function setupServerApiClient() {
   client.setConfig({
-    baseUrl: process.env.BACKEND_URL || 'http://localhost:8000',
+    baseUrl: CONFIG.api.internalUrl,
   });
 
   // Регистрируем перехватчик один раз — иначе они накапливаются на каждый вызов.
