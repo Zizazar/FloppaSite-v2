@@ -2,7 +2,6 @@ import type { Metadata } from 'next';
 import { Space_Grotesk, Geist } from 'next/font/google';
 import './globals.css';
 import Navbar from '@/components/Navbar';
-import HomeMessageBar from '@/components/HomeMessageBar';
 import { QueryProvider } from '@/providers/QueryProvider';
 import { cn } from "@/lib/utils";
 
@@ -24,7 +23,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <QueryProvider>
           <div className="flex flex-col min-h-screen">
             <Navbar />
-            <HomeMessageBar />
             <main className="flex-grow">
               {children}
             </main>

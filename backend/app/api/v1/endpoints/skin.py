@@ -58,15 +58,10 @@ async def get_user_avatar(
 
 @router.post("/upload")
 async def upload_skin(
-    current_user: Optional[User] = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     file: UploadFile = File(...),
 ):
-    if not current_user:
-        raise HTTPException(status_code=401, detail="Not Authenticated")
-    
-    if file.content_type != "image/png":
-        raise HTTPException(status_code=400, detail="Only PNG files are allowed")
-    
+    # Формат и размер проверяются в upload_skin_file по содержимому файла
     await upload_skin_file(current_user, file)
     return {"message": "Skin uploaded successfully"}
 

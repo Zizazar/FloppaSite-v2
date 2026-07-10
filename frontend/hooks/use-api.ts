@@ -118,7 +118,7 @@ export const useChangeUsername = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (username: string) => {
-      const { data } = await changeUsername({ query: { username }, throwOnError: true });
+      const { data } = await changeUsername({ body: { username }, throwOnError: true });
       return data;
     },
     onSuccess: () => {

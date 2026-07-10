@@ -33,6 +33,7 @@ export default function HowToStart() {
             <p className="text-zinc-400 text-sm mb-4">Выберите версию для вашей операционной системы.</p>
             <a href={CONFIG.launcher.exe} className="text-green-500 hover:text-green-400 font-semibold text-sm transition-colors">Скачать для Windows →</a>
             <a href={CONFIG.launcher.jar} className="text-green-500 hover:text-green-400 font-semibold text-sm transition-colors mt-2">Скачать для Linux/MacOS →</a>
+            <a href={CONFIG.launcher.appimage} className="text-green-500 hover:text-green-400 font-semibold text-sm transition-colors mt-2">Скачать для Steam Deck →</a>
           </div>
 
           <div className="relative z-10 flex flex-col items-center text-center group">

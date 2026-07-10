@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Server, Save, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Server, Save, CheckCircle2, AlertCircle, Loader2, Pin, Search } from "lucide-react";
 import { client } from "@/client/client.gen";
-import ModSelector, { Mod } from "@/components/ModSelector";
 
 interface ServerConfig {
   ip: string;
@@ -12,12 +11,33 @@ interface ServerConfig {
   version: string;
   launchDate: string;
   modLoader: string;
-  mods: Mod[];
+  modsRepoUrl: string;
+  pinnedMods: string[];
 }
 
 const EMPTY_CONFIG: ServerConfig = {
-  ip: "", name: "", description: "", version: "", launchDate: "", modLoader: "", mods: [],
+  ip: "", name: "", description: "", version: "", launchDate: "", modLoader: "", modsRepoUrl: "", pinnedMods: [],
 };
+
+// Мод для выбора закрепления: ключ (filename) + отображаемое имя.
+type PinOption = { key: string; name: string };
+
+// Группируем записи packwiz по filename, как это делает список на главной.
+function groupModOptions(entries: any[]): PinOption[] {
+  const map = new Map<string, PinOption>();
+  for (const e of entries) {
+    const key = e.filename || e.name || e.page_url;
+    if (!key) continue;
+    const existing = map.get(key);
+    // Имя из modrinth предпочтительнее (у curseforge бывает суффикс вроде "(NeoForge)").
+    if (!existing) {
+      map.set(key, { key, name: e.name || key });
+    } else if (e.platform === "modrinth" && e.name) {
+      existing.name = e.name;
+    }
+  }
+  return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
+}
 
 export default function ServerTab() {
   const [config, setConfig] = useState<ServerConfig>(EMPTY_CONFIG);
@@ -25,13 +45,15 @@ export default function ServerTab() {
   const [isSaving, setIsSaving] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
+  const [modOptions, setModOptions] = useState<PinOption[]>([]);
+  const [modsLoading, setModsLoading] = useState(true);
+  const [pinSearch, setPinSearch] = useState("");
 
   useEffect(() => {
     const fetchConfig = async () => {
       try {
         const { data } = await client.get({ url: '/api/v1/admin/server', throwOnError: true, security: [{ scheme: 'bearer', type: 'http' }] });
-        // Страхуемся, чтобы mods всегда был массивом (ModSelector ожидает массив).
-        setConfig({ ...EMPTY_CONFIG, ...(data as any), mods: (data as any)?.mods ?? [] });
+        setConfig({ ...EMPTY_CONFIG, ...(data as any) });
       } catch {
         setError("Не удалось загрузить конфигурацию");
       } finally {
@@ -40,6 +62,37 @@ export default function ServerTab() {
     };
     fetchConfig();
   }, []);
+
+  // Список модов для выбора закреплённых — обновляется при изменении URL репозитория (после сохранения).
+  useEffect(() => {
+    const fetchMods = async () => {
+      setModsLoading(true);
+      try {
+        const { data } = await client.get({ url: '/api/v1/admin/mods', throwOnError: true });
+        setModOptions(groupModOptions((data as any[]) ?? []));
+      } catch {
+        setModOptions([]);
+      } finally {
+        setModsLoading(false);
+      }
+    };
+    fetchMods();
+  }, []);
+
+  const togglePin = (key: string) => {
+    setConfig((c) => ({
+      ...c,
+      pinnedMods: c.pinnedMods.includes(key)
+        ? c.pinnedMods.filter((k) => k !== key)
+        : [...c.pinnedMods, key],
+    }));
+  };
+
+  const filteredOptions = useMemo(() => {
+    const q = pinSearch.trim().toLowerCase();
+    if (!q) return modOptions;
+    return modOptions.filter((m) => m.name.toLowerCase().includes(q));
+  }, [modOptions, pinSearch]);
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -150,14 +203,81 @@ export default function ServerTab() {
           </div>
 
           <div className="md:col-span-2 mt-4">
-            <label className="block text-sm font-bold text-zinc-300 mb-4 flex items-center gap-2">
-              Список модов
-              <span className="bg-red-500/10 text-red-500 text-xs px-2 py-0.5 rounded-md border border-red-500/20">{config.mods.length}</span>
-            </label>
-            <ModSelector
-              selectedMods={config.mods}
-              onChange={(mods) => setConfig({ ...config, mods })}
+            <label className="block text-sm font-bold text-zinc-300 mb-2">URL репозитория модов (packwiz)</label>
+            <input
+              type="url"
+              value={config.modsRepoUrl}
+              onChange={(e) => setConfig({ ...config, modsRepoUrl: e.target.value })}
+              placeholder="https://example.com/pack/mods.json"
+              className="block w-full px-4 py-3 border border-zinc-800 rounded-xl bg-zinc-950/50 text-white placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 sm:text-sm transition-all font-mono"
             />
+            <p className="text-zinc-500 text-xs mt-2">
+              Ссылка на JSON-массив модов (packwiz export). Список показывается на главной странице в разделе «Список модов».
+            </p>
+          </div>
+
+          <div className="md:col-span-2 mt-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Pin className="w-4 h-4 text-red-500" />
+              <label className="block text-sm font-bold text-zinc-300">Закреплённые моды</label>
+              {config.pinnedMods.length > 0 && (
+                <span className="text-xs font-semibold text-red-400 bg-red-500/10 px-2 py-0.5 rounded-md">
+                  Выбрано: {config.pinnedMods.length}
+                </span>
+              )}
+            </div>
+            <p className="text-zinc-500 text-xs mb-3">
+              Отмеченные моды показываются в начале списка крупными плитками со скриншотом из галереи. Не забудьте сохранить.
+            </p>
+
+            {modsLoading ? (
+              <div className="py-8 flex justify-center border border-zinc-800 rounded-xl bg-zinc-950/50">
+                <Loader2 className="w-6 h-6 text-red-500 animate-spin" />
+              </div>
+            ) : modOptions.length === 0 ? (
+              <div className="py-6 text-center text-zinc-500 text-sm border border-zinc-800 rounded-xl bg-zinc-950/50">
+                Список модов пуст. Укажите URL репозитория и сохраните, затем обновите страницу.
+              </div>
+            ) : (
+              <div className="border border-zinc-800 rounded-xl bg-zinc-950/50 overflow-hidden">
+                <div className="p-3 border-b border-zinc-800/80 relative">
+                  <div className="absolute inset-y-0 left-0 pl-6 flex items-center pointer-events-none">
+                    <Search className="h-4 w-4 text-zinc-500" />
+                  </div>
+                  <input
+                    type="text"
+                    value={pinSearch}
+                    onChange={(e) => setPinSearch(e.target.value)}
+                    placeholder="Поиск мода..."
+                    className="block w-full pl-8 pr-3 py-2 border border-zinc-800 rounded-lg bg-zinc-900/60 text-white placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm transition-all"
+                  />
+                </div>
+                <div className="max-h-72 overflow-y-auto divide-y divide-zinc-800/60">
+                  {filteredOptions.map((mod) => {
+                    const checked = config.pinnedMods.includes(mod.key);
+                    return (
+                      <label
+                        key={mod.key}
+                        className="flex items-center gap-3 px-4 py-2.5 cursor-pointer hover:bg-zinc-900/60 transition-colors"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={() => togglePin(mod.key)}
+                          className="w-4 h-4 rounded accent-red-500 shrink-0"
+                        />
+                        <span className={`text-sm truncate ${checked ? "text-white font-medium" : "text-zinc-400"}`} title={mod.name}>
+                          {mod.name}
+                        </span>
+                      </label>
+                    );
+                  })}
+                  {filteredOptions.length === 0 && (
+                    <div className="px-4 py-6 text-center text-zinc-500 text-sm">Ничего не найдено</div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 

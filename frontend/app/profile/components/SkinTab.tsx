@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { Shirt, Upload, Download, Save, AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
 import SkinViewer from "@/components/SkinViewer";
+import DoomCaptcha from "@/components/DoomCaptcha";
 import type { UserResponse } from "@/client";
 import { useUploadSkin } from "@/hooks/use-api";
 import { getFastApiError } from "@/lib/utils";
@@ -22,6 +23,7 @@ export default function SkinTab({ user, onSkinUpdated }: SkinTabProps) {
 
   const [mojangNickname, setMojangNickname] = useState("");
   const [isImporting, setIsImporting] = useState(false);
+  const [showCaptcha, setShowCaptcha] = useState(false);
 
   const { mutateAsync: uploadSkinMut, isPending: isSavingSkin } = useUploadSkin();
 
@@ -42,7 +44,16 @@ export default function SkinTab({ user, onSkinUpdated }: SkinTabProps) {
     }
   };
 
-  const handleSaveSkin = async () => {
+  // Клик по «Установить скин» не загружает скин сразу, а сначала показывает
+  // DOOM-капчу. Реальная загрузка выполняется в performUpload после победы.
+  const handleSaveSkin = () => {
+    if (!previewSkinUrl) return;
+    setSkinError("");
+    setSkinSuccess(false);
+    setShowCaptcha(true);
+  };
+
+  const performUpload = async () => {
     if (!previewSkinUrl) return;
     setSkinError("");
     setSkinSuccess(false);
@@ -57,6 +68,11 @@ export default function SkinTab({ user, onSkinUpdated }: SkinTabProps) {
     } catch (e) {
       setSkinError(getFastApiError(e));
     }
+  };
+
+  const handleCaptchaSolved = () => {
+    setShowCaptcha(false);
+    void performUpload();
   };
 
   const handleImportMojang = () => {
@@ -156,6 +172,13 @@ export default function SkinTab({ user, onSkinUpdated }: SkinTabProps) {
           </div>
         </div>
       </div>
+
+      {showCaptcha && (
+        <DoomCaptcha
+          onSolved={handleCaptchaSolved}
+          onClose={() => setShowCaptcha(false)}
+        />
+      )}
     </div>
   );
 }

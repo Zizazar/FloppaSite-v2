@@ -52,3 +52,6 @@ MANIFEST
 .mypy_cache/
 .coverage
 htmlcov/
+
+uploads
+alembic

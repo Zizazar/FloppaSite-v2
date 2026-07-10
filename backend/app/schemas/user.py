@@ -1,12 +1,16 @@
-from typing import List
+from datetime import datetime
+from typing import List, Optional
 
-from pydantic import BaseModel, Field, root_validator
+from pydantic import BaseModel, Field
+
+from app.schemas.auth import USERNAME_PATTERN
 
 class UserResponse(BaseModel):
     id: int
     username: str
     is_active: bool
     role: str
+    created_at: Optional[datetime] = None
 
 class UserListResponse(BaseModel):
     users: List[UserResponse]
@@ -16,11 +20,11 @@ class UserListResponse(BaseModel):
 
 class ChangePasswordRequest(BaseModel):
     old_password: str = Field(..., min_length=6)
-    new_password: str = Field(..., min_length=8)
-    confirm_password: str = Field(..., min_length=8)
-    
-    def validate_passwords(self):
-        if self.new_password != self.confirm_password:
-            raise ValueError("Passwords don't match")
-        if self.old_password == self.new_password:
-            raise ValueError("New password must be different")
+    new_password: str = Field(..., min_length=8, max_length=128)
+    confirm_password: str = Field(..., min_length=8, max_length=128)
+
+class ChangeUsernameRequest(BaseModel):
+    username: str = Field(..., min_length=3, max_length=16, pattern=USERNAME_PATTERN)
+
+class UserStatusRequest(BaseModel):
+    is_active: bool

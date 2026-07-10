@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>DOOM Captcha</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="doom.css" />
+  <style>
+    /* Значения переменных темы, которые доступны на основном сайте, но не
+       внутри iframe. Подобраны под тёмную (zinc) тему FloppaSite. */
+    :root {
+      --roundness: 12px;
+      --background_captcha: #18181b;
+      --accent1: #22c55e;
+      --accent15: #27272a;
+      --accent2: #3f3f46;
+      --accent3: #a1a1aa;
+      --accent3darker: #71717a;
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background: transparent;
+      overflow: hidden;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    }
+
+    /* Капча занимает всю ширину iframe (в doom.css по умолчанию display:none и
+       position:absolute для встраивания в форму). Так вокруг игры нет тёмных
+       полей — высоту iframe подгоняем под контент со стороны React. */
+    .captcha-container {
+      display: block;
+      position: static;
+      width: 100%;
+      margin: 0;
+      box-sizing: border-box;
+      min-width: 0;
+    }
+
+    /* Канвас на всю ширину окна с сохранением пропорций DOOM (16/10 из doom.css).
+       Отключаем фикс-ширину (иначе media-query внутри iframe оставляет игру
+       узкой) и ручной resize (артефакт в углу). */
+    .captcha-canvas-container {
+      width: auto;
+      min-width: 0;
+      resize: none;
+    }
+
+    .captcha-container:focus {
+      box-shadow: inset 0 0 0 2px rgba(34, 197, 94, 0.55);
+    }
+
+    .material-symbols-outlined {
+      font-family: "Material Symbols Outlined";
+      font-weight: normal;
+      font-style: normal;
+      line-height: 1;
+      letter-spacing: normal;
+      text-transform: none;
+      white-space: nowrap;
+      word-wrap: normal;
+      direction: ltr;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="captcha-container" tabindex="1">
+    <div class="captcha-header">
+      <h2>ВЫ ДОЛЖНЫ ЗАСЛУЖИТЬ СВОЙ СКИН!</h2>
+      <p>Убейте трёх монстров в DOOM®</p>
+    </div>
+
+    <div class="captcha-canvas-container">
+      <div id="status">Загрузка...</div>
+      <progress id="progress" value="0" max="100" hidden></progress>
+      <canvas class="captcha-canvas" id="canvas" oncontextmenu="event.preventDefault()" tabindex="-1"></canvas>
+      <div class="mobile-controls">
+        <div class="d-pad">
+          <button class="up">↑</button>
+          <button class="left">←</button>
+          <button class="right">→</button>
+          <button class="down">↓</button>
+        </div>
+        <button class="fire-button"></button>
+      </div>
+    </div>
+
+    <div class="captcha-footer">
+      <div class="captcha-controls">
+        <button class="captcha-button captcha-refresh-button" aria-label="Refresh challenge" id="refresh-button">
+          <span class="captcha-refresh-icon material-symbols-outlined">refresh</span>
+        </button>
+      </div>
+      <div class="status-message focus">Нажмите чтобы играть</div>
+      <div class="status-message death">Вы умерли! Повторите попытку</div>
+      <div class="status-message instructions">Используйте WASD и Пробел</div>
+      <button class="captcha-button captcha-verify-button" aria-label="Verify, 0 out of 3 monsters killed"
+        id="verify-button">
+        <span class="material-symbols-outlined captcha-verify-icon">
+          skull
+        </span>
+        <span>0/3</span>
+      </button>
+    </div>
+  </div>
+
+  <script>
+    // Пути к ресурсам DOOM. Сборка Emscripten (doom.js) ожидает эти
+    // глобальные переменные снаружи: DATA_PATH — пакет ресурсов (file_packager),
+    // WASM_PATH — сам wasm-модуль. Без них загрузчик падает с ReferenceError.
+    var DATA_PATH = "doom.data";
+    var WASM_PATH = "doom.wasm";
+  </script>
+  <script>
+    // Заглушка Vercel Analytics (va) — менеджер вызывает va(...) для событий.
+    window.va =
+      window.va ||
+      function () {
+        (window.vaq = window.vaq || []).push(arguments);
+      };
+  </script>
+  <script src="doom_manager.js"></script>
+  <script async type="text/javascript" src="doom.js"></script>
+</body>
+
+</html>

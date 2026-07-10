@@ -2,7 +2,7 @@
 
 import { type Client, type ClientMeta, formDataBodySerializer, type Options as Options2, type RequestResult, type TDataShape } from './client';
 import { client } from './client.gen';
-import type { ChangePasswordData, ChangePasswordErrors, ChangePasswordResponses, ChangeUsernameData, ChangeUsernameErrors, ChangeUsernameResponses, DeleteUserData, DeleteUserErrors, DeleteUserResponses, GetSkinByNameData, GetSkinByNameErrors, GetSkinByNameResponses, GetUserAvatarData, GetUserAvatarErrors, GetUserAvatarResponses, GetUserData, GetUserErrors, GetUserProfileData, GetUserProfileResponses, GetUserResponses, HealthCheckGetData, HealthCheckGetResponses, ListUsersData, ListUsersResponses, LoginData, LoginErrors, LoginResponses, LogoutData, LogoutResponses, RegisterData, RegisterErrors, RegisterResponses, UploadSkinData, UploadSkinErrors, UploadSkinResponses } from './types.gen';
+import type { ChangePasswordData, ChangePasswordErrors, ChangePasswordResponses, ChangeUsernameData, ChangeUsernameErrors, ChangeUsernameResponses, CreateArchiveData, CreateArchiveErrors, CreateArchiveResponses, DeleteArchiveData, DeleteArchiveErrors, DeleteArchiveResponses, DeleteUserData, DeleteUserErrors, DeleteUserResponses, GetArchiveData, GetArchiveErrors, GetArchiveResponses, GetModsData, GetModsResponses, GetServerConfigData, GetServerConfigResponses, GetServerStatusData, GetServerStatusResponses, GetSkinByNameData, GetSkinByNameErrors, GetSkinByNameResponses, GetStatsData, GetStatsResponses, GetUserAvatarData, GetUserAvatarErrors, GetUserAvatarResponses, GetUserData, GetUserErrors, GetUserProfileData, GetUserProfileResponses, GetUserResponses, HealthCheckGetData, HealthCheckGetResponses, ListArchivesData, ListArchivesResponses, ListUsersData, ListUsersResponses, LoginData, LoginErrors, LoginResponses, LogoutData, LogoutResponses, RegisterData, RegisterErrors, RegisterResponses, SetUserStatusData, SetUserStatusErrors, SetUserStatusResponses, UpdateArchiveData, UpdateArchiveErrors, UpdateArchiveResponses, UpdateServerConfigData, UpdateServerConfigErrors, UpdateServerConfigResponses, UploadSkinData, UploadSkinErrors, UploadSkinResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -38,7 +38,14 @@ export const changePassword = <ThrowOnError extends boolean = false>(options: Op
 /**
  * Change Username
  */
-export const changeUsername = <ThrowOnError extends boolean = false>(options: Options<ChangeUsernameData, ThrowOnError>): RequestResult<ChangeUsernameResponses, ChangeUsernameErrors, ThrowOnError> => (options.client ?? client).post<ChangeUsernameResponses, ChangeUsernameErrors, ThrowOnError>({ url: '/api/v1/user/change-username', ...options });
+export const changeUsername = <ThrowOnError extends boolean = false>(options: Options<ChangeUsernameData, ThrowOnError>): RequestResult<ChangeUsernameResponses, ChangeUsernameErrors, ThrowOnError> => (options.client ?? client).post<ChangeUsernameResponses, ChangeUsernameErrors, ThrowOnError>({
+    url: '/api/v1/user/change-username',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
 
 /**
  * List Users
@@ -54,6 +61,18 @@ export const deleteUser = <ThrowOnError extends boolean = false>(options: Option
  * Get User
  */
 export const getUser = <ThrowOnError extends boolean = false>(options: Options<GetUserData, ThrowOnError>): RequestResult<GetUserResponses, GetUserErrors, ThrowOnError> => (options.client ?? client).get<GetUserResponses, GetUserErrors, ThrowOnError>({ url: '/api/v1/user/{user_id}', ...options });
+
+/**
+ * Set User Status
+ */
+export const setUserStatus = <ThrowOnError extends boolean = false>(options: Options<SetUserStatusData, ThrowOnError>): RequestResult<SetUserStatusResponses, SetUserStatusErrors, ThrowOnError> => (options.client ?? client).post<SetUserStatusResponses, SetUserStatusErrors, ThrowOnError>({
+    url: '/api/v1/user/{user_id}/status',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
 
 /**
  * Login
@@ -106,6 +125,81 @@ export const uploadSkin = <ThrowOnError extends boolean = false>(options: Option
         ...options.headers
     }
 });
+
+/**
+ * Get Stats
+ */
+export const getStats = <ThrowOnError extends boolean = false>(options?: Options<GetStatsData, ThrowOnError>): RequestResult<GetStatsResponses, unknown, ThrowOnError> => (options?.client ?? client).get<GetStatsResponses, unknown, ThrowOnError>({ url: '/api/v1/admin/stats', ...options });
+
+/**
+ * Get Server Config
+ */
+export const getServerConfig = <ThrowOnError extends boolean = false>(options?: Options<GetServerConfigData, ThrowOnError>): RequestResult<GetServerConfigResponses, unknown, ThrowOnError> => (options?.client ?? client).get<GetServerConfigResponses, unknown, ThrowOnError>({ url: '/api/v1/admin/server', ...options });
+
+/**
+ * Update Server Config
+ */
+export const updateServerConfig = <ThrowOnError extends boolean = false>(options: Options<UpdateServerConfigData, ThrowOnError>): RequestResult<UpdateServerConfigResponses, UpdateServerConfigErrors, ThrowOnError> => (options.client ?? client).put<UpdateServerConfigResponses, UpdateServerConfigErrors, ThrowOnError>({
+    url: '/api/v1/admin/server',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Get Mods
+ *
+ * Список модов из репозитория packwiz (см. ServerConfig.mods_repo_url).
+ */
+export const getMods = <ThrowOnError extends boolean = false>(options?: Options<GetModsData, ThrowOnError>): RequestResult<GetModsResponses, unknown, ThrowOnError> => (options?.client ?? client).get<GetModsResponses, unknown, ThrowOnError>({ url: '/api/v1/admin/mods', ...options });
+
+/**
+ * Get Server Status
+ *
+ * Живой статус майнкрафт-сервера — реальный пинг по config.ip.
+ */
+export const getServerStatus = <ThrowOnError extends boolean = false>(options?: Options<GetServerStatusData, ThrowOnError>): RequestResult<GetServerStatusResponses, unknown, ThrowOnError> => (options?.client ?? client).get<GetServerStatusResponses, unknown, ThrowOnError>({ url: '/api/v1/admin/status', ...options });
+
+/**
+ * Create Archive
+ */
+export const createArchive = <ThrowOnError extends boolean = false>(options: Options<CreateArchiveData, ThrowOnError>): RequestResult<CreateArchiveResponses, CreateArchiveErrors, ThrowOnError> => (options.client ?? client).post<CreateArchiveResponses, CreateArchiveErrors, ThrowOnError>({
+    url: '/api/v1/admin/archive',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Delete Archive
+ */
+export const deleteArchive = <ThrowOnError extends boolean = false>(options: Options<DeleteArchiveData, ThrowOnError>): RequestResult<DeleteArchiveResponses, DeleteArchiveErrors, ThrowOnError> => (options.client ?? client).delete<DeleteArchiveResponses, DeleteArchiveErrors, ThrowOnError>({ url: '/api/v1/admin/archive/{archive_id}', ...options });
+
+/**
+ * Update Archive
+ */
+export const updateArchive = <ThrowOnError extends boolean = false>(options: Options<UpdateArchiveData, ThrowOnError>): RequestResult<UpdateArchiveResponses, UpdateArchiveErrors, ThrowOnError> => (options.client ?? client).put<UpdateArchiveResponses, UpdateArchiveErrors, ThrowOnError>({
+    url: '/api/v1/admin/archive/{archive_id}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * List Archives
+ */
+export const listArchives = <ThrowOnError extends boolean = false>(options?: Options<ListArchivesData, ThrowOnError>): RequestResult<ListArchivesResponses, unknown, ThrowOnError> => (options?.client ?? client).get<ListArchivesResponses, unknown, ThrowOnError>({ url: '/api/v1/archive', ...options });
+
+/**
+ * Get Archive
+ */
+export const getArchive = <ThrowOnError extends boolean = false>(options: Options<GetArchiveData, ThrowOnError>): RequestResult<GetArchiveResponses, GetArchiveErrors, ThrowOnError> => (options.client ?? client).get<GetArchiveResponses, GetArchiveErrors, ThrowOnError>({ url: '/api/v1/archive/{archive_id}', ...options });
 
 /**
  * Health Check

@@ -3,8 +3,8 @@
 import { type DefaultError, queryOptions, type UseMutationOptions } from '@tanstack/react-query';
 
 import { client } from '../client.gen';
-import { changePassword, changeUsername, deleteUser, getSkinByName, getUser, getUserAvatar, getUserProfile, healthCheckGet, listUsers, login, logout, type Options, register, uploadSkin } from '../sdk.gen';
-import type { ChangePasswordData, ChangePasswordError, ChangeUsernameData, ChangeUsernameError, DeleteUserData, DeleteUserError, GetSkinByNameData, GetSkinByNameError, GetUserAvatarData, GetUserAvatarError, GetUserData, GetUserError, GetUserProfileData, GetUserProfileResponse, GetUserResponse, HealthCheckGetData, ListUsersData, ListUsersResponse, LoginData, LoginError, LoginResponse, LogoutData, RegisterData, RegisterError, RegisterResponse, UploadSkinData, UploadSkinError } from '../types.gen';
+import { changePassword, changeUsername, createArchive, deleteArchive, deleteUser, getArchive, getMods, getServerConfig, getServerStatus, getSkinByName, getStats, getUser, getUserAvatar, getUserProfile, healthCheckGet, listArchives, listUsers, login, logout, type Options, register, setUserStatus, updateArchive, updateServerConfig, uploadSkin } from '../sdk.gen';
+import type { ChangePasswordData, ChangePasswordError, ChangeUsernameData, ChangeUsernameError, CreateArchiveData, CreateArchiveError, CreateArchiveResponse, DeleteArchiveData, DeleteArchiveError, DeleteArchiveResponse, DeleteUserData, DeleteUserError, DeleteUserResponse, GetArchiveData, GetArchiveError, GetArchiveResponse, GetModsData, GetModsResponse, GetServerConfigData, GetServerConfigResponse, GetServerStatusData, GetServerStatusResponse, GetSkinByNameData, GetSkinByNameError, GetStatsData, GetStatsResponse, GetUserAvatarData, GetUserAvatarError, GetUserData, GetUserError, GetUserProfileData, GetUserProfileResponse, GetUserResponse, HealthCheckGetData, ListArchivesData, ListArchivesResponse, ListUsersData, ListUsersResponse, LoginData, LoginError, LoginResponse, LogoutData, RegisterData, RegisterError, RegisterResponse, SetUserStatusData, SetUserStatusError, SetUserStatusResponse, UpdateArchiveData, UpdateArchiveError, UpdateArchiveResponse, UpdateServerConfigData, UpdateServerConfigError, UpdateServerConfigResponse, UploadSkinData, UploadSkinError } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseUrl' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -112,8 +112,8 @@ export const listUsersOptions = (options?: Options<ListUsersData>) => queryOptio
 /**
  * Delete User
  */
-export const deleteUserMutation = (options?: Partial<Options<DeleteUserData>>): UseMutationOptions<unknown, DeleteUserError, Options<DeleteUserData>> => {
-    const mutationOptions: UseMutationOptions<unknown, DeleteUserError, Options<DeleteUserData>> = {
+export const deleteUserMutation = (options?: Partial<Options<DeleteUserData>>): UseMutationOptions<DeleteUserResponse, DeleteUserError, Options<DeleteUserData>> => {
+    const mutationOptions: UseMutationOptions<DeleteUserResponse, DeleteUserError, Options<DeleteUserData>> = {
         mutationFn: async (fnOptions) => {
             const { data } = await deleteUser({
                 ...options,
@@ -143,6 +143,23 @@ export const getUserOptions = (options: Options<GetUserData>) => queryOptions<Ge
     },
     queryKey: getUserQueryKey(options)
 });
+
+/**
+ * Set User Status
+ */
+export const setUserStatusMutation = (options?: Partial<Options<SetUserStatusData>>): UseMutationOptions<SetUserStatusResponse, SetUserStatusError, Options<SetUserStatusData>> => {
+    const mutationOptions: UseMutationOptions<SetUserStatusResponse, SetUserStatusError, Options<SetUserStatusData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await setUserStatus({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
 
 /**
  * Login
@@ -247,6 +264,186 @@ export const uploadSkinMutation = (options?: Partial<Options<UploadSkinData>>): 
     };
     return mutationOptions;
 };
+
+export const getStatsQueryKey = (options?: Options<GetStatsData>) => createQueryKey('getStats', options);
+
+/**
+ * Get Stats
+ */
+export const getStatsOptions = (options?: Options<GetStatsData>) => queryOptions<GetStatsResponse, DefaultError, GetStatsResponse, ReturnType<typeof getStatsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getStats({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getStatsQueryKey(options)
+});
+
+export const getServerConfigQueryKey = (options?: Options<GetServerConfigData>) => createQueryKey('getServerConfig', options);
+
+/**
+ * Get Server Config
+ */
+export const getServerConfigOptions = (options?: Options<GetServerConfigData>) => queryOptions<GetServerConfigResponse, DefaultError, GetServerConfigResponse, ReturnType<typeof getServerConfigQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getServerConfig({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getServerConfigQueryKey(options)
+});
+
+/**
+ * Update Server Config
+ */
+export const updateServerConfigMutation = (options?: Partial<Options<UpdateServerConfigData>>): UseMutationOptions<UpdateServerConfigResponse, UpdateServerConfigError, Options<UpdateServerConfigData>> => {
+    const mutationOptions: UseMutationOptions<UpdateServerConfigResponse, UpdateServerConfigError, Options<UpdateServerConfigData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await updateServerConfig({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getModsQueryKey = (options?: Options<GetModsData>) => createQueryKey('getMods', options);
+
+/**
+ * Get Mods
+ *
+ * Список модов из репозитория packwiz (см. ServerConfig.mods_repo_url).
+ */
+export const getModsOptions = (options?: Options<GetModsData>) => queryOptions<GetModsResponse, DefaultError, GetModsResponse, ReturnType<typeof getModsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getMods({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getModsQueryKey(options)
+});
+
+export const getServerStatusQueryKey = (options?: Options<GetServerStatusData>) => createQueryKey('getServerStatus', options);
+
+/**
+ * Get Server Status
+ *
+ * Живой статус майнкрафт-сервера — реальный пинг по config.ip.
+ */
+export const getServerStatusOptions = (options?: Options<GetServerStatusData>) => queryOptions<GetServerStatusResponse, DefaultError, GetServerStatusResponse, ReturnType<typeof getServerStatusQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getServerStatus({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getServerStatusQueryKey(options)
+});
+
+/**
+ * Create Archive
+ */
+export const createArchiveMutation = (options?: Partial<Options<CreateArchiveData>>): UseMutationOptions<CreateArchiveResponse, CreateArchiveError, Options<CreateArchiveData>> => {
+    const mutationOptions: UseMutationOptions<CreateArchiveResponse, CreateArchiveError, Options<CreateArchiveData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await createArchive({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Delete Archive
+ */
+export const deleteArchiveMutation = (options?: Partial<Options<DeleteArchiveData>>): UseMutationOptions<DeleteArchiveResponse, DeleteArchiveError, Options<DeleteArchiveData>> => {
+    const mutationOptions: UseMutationOptions<DeleteArchiveResponse, DeleteArchiveError, Options<DeleteArchiveData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await deleteArchive({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Update Archive
+ */
+export const updateArchiveMutation = (options?: Partial<Options<UpdateArchiveData>>): UseMutationOptions<UpdateArchiveResponse, UpdateArchiveError, Options<UpdateArchiveData>> => {
+    const mutationOptions: UseMutationOptions<UpdateArchiveResponse, UpdateArchiveError, Options<UpdateArchiveData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await updateArchive({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const listArchivesQueryKey = (options?: Options<ListArchivesData>) => createQueryKey('listArchives', options);
+
+/**
+ * List Archives
+ */
+export const listArchivesOptions = (options?: Options<ListArchivesData>) => queryOptions<ListArchivesResponse, DefaultError, ListArchivesResponse, ReturnType<typeof listArchivesQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await listArchives({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: listArchivesQueryKey(options)
+});
+
+export const getArchiveQueryKey = (options: Options<GetArchiveData>) => createQueryKey('getArchive', options);
+
+/**
+ * Get Archive
+ */
+export const getArchiveOptions = (options: Options<GetArchiveData>) => queryOptions<GetArchiveResponse, GetArchiveError, GetArchiveResponse, ReturnType<typeof getArchiveQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getArchive({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getArchiveQueryKey(options)
+});
 
 export const healthCheckGetQueryKey = (options?: Options<HealthCheckGetData>) => createQueryKey('healthCheckGet', options);
 

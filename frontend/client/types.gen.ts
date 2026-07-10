@@ -5,6 +5,97 @@ export type ClientOptions = {
 };
 
 /**
+ * ArchiveCreate
+ */
+export type ArchiveCreate = {
+    /**
+     * Name
+     */
+    name?: string;
+    /**
+     * Version
+     */
+    version?: string;
+    /**
+     * Modloader
+     */
+    modLoader?: string;
+    /**
+     * Description
+     */
+    description?: string;
+    /**
+     * Files
+     */
+    files?: Array<ArchiveFileSchema>;
+    /**
+     * Screenshots
+     */
+    screenshots?: Array<string>;
+};
+
+/**
+ * ArchiveFileSchema
+ */
+export type ArchiveFileSchema = {
+    /**
+     * Id
+     */
+    id?: number;
+    /**
+     * Name
+     */
+    name?: string;
+    /**
+     * Type
+     */
+    type?: string;
+    /**
+     * Size
+     */
+    size?: string;
+    /**
+     * Url
+     */
+    url?: string;
+    [key: string]: unknown;
+};
+
+/**
+ * ArchiveResponse
+ */
+export type ArchiveResponse = {
+    /**
+     * Name
+     */
+    name?: string;
+    /**
+     * Version
+     */
+    version?: string;
+    /**
+     * Modloader
+     */
+    modLoader?: string;
+    /**
+     * Description
+     */
+    description?: string;
+    /**
+     * Files
+     */
+    files?: Array<ArchiveFileSchema>;
+    /**
+     * Screenshots
+     */
+    screenshots?: Array<string>;
+    /**
+     * Id
+     */
+    id: number;
+};
+
+/**
  * Body_upload_skin_api_v1_skin_upload_post
  */
 export type BodyUploadSkinApiV1SkinUploadPost = {
@@ -33,6 +124,16 @@ export type ChangePasswordRequest = {
 };
 
 /**
+ * ChangeUsernameRequest
+ */
+export type ChangeUsernameRequest = {
+    /**
+     * Username
+     */
+    username: string;
+};
+
+/**
  * HTTPValidationError
  */
 export type HttpValidationError = {
@@ -57,6 +158,61 @@ export type LoginRequest = {
 };
 
 /**
+ * ModEntry
+ *
+ * Один мод из репозитория packwiz (одна запись на платформу/сторону).
+ *
+ * Формат приходит извне (packwiz export), поэтому допускаем лишние поля.
+ */
+export type ModEntry = {
+    /**
+     * Name
+     */
+    name?: string;
+    /**
+     * Version
+     */
+    version?: string;
+    /**
+     * Filename
+     */
+    filename?: string;
+    /**
+     * Download Url
+     */
+    download_url?: string;
+    /**
+     * Page Url
+     */
+    page_url?: string;
+    /**
+     * Platform
+     */
+    platform?: string;
+    /**
+     * Side
+     */
+    side?: string;
+    [key: string]: unknown;
+};
+
+/**
+ * PlayerSample
+ *
+ * Игрок из sample-списка ответа Server List Ping.
+ */
+export type PlayerSample = {
+    /**
+     * Name
+     */
+    name?: string;
+    /**
+     * Uuid
+     */
+    uuid?: string;
+};
+
+/**
  * RegisterRequest
  */
 export type RegisterRequest = {
@@ -68,6 +224,106 @@ export type RegisterRequest = {
      * Password
      */
     password: string;
+};
+
+/**
+ * ServerConfigSchema
+ */
+export type ServerConfigSchema = {
+    /**
+     * Ip
+     */
+    ip?: string;
+    /**
+     * Name
+     */
+    name?: string;
+    /**
+     * Description
+     */
+    description?: string;
+    /**
+     * Version
+     */
+    version?: string;
+    /**
+     * Launchdate
+     */
+    launchDate?: string;
+    /**
+     * Modloader
+     */
+    modLoader?: string;
+    /**
+     * Modsrepourl
+     */
+    modsRepoUrl?: string;
+    /**
+     * Pinnedmods
+     */
+    pinnedMods?: Array<string>;
+};
+
+/**
+ * ServerStatusResponse
+ *
+ * Живой статус майнкрафт-сервера (реальный пинг по config.ip).
+ */
+export type ServerStatusResponse = {
+    /**
+     * Online
+     */
+    online?: boolean;
+    /**
+     * Playersonline
+     */
+    playersOnline?: number;
+    /**
+     * Playersmax
+     */
+    playersMax?: number;
+    /**
+     * Latencyms
+     */
+    latencyMs?: number;
+    /**
+     * Version
+     */
+    version?: string;
+    /**
+     * Players
+     */
+    players?: Array<PlayerSample>;
+};
+
+/**
+ * StatsResponse
+ */
+export type StatsResponse = {
+    /**
+     * Onlineplayers
+     */
+    onlinePlayers?: number;
+    /**
+     * Websiteusersnow
+     */
+    websiteUsersNow?: number;
+    /**
+     * Launcherdownloads
+     */
+    launcherDownloads?: number;
+    /**
+     * Websiteusersdaily
+     */
+    websiteUsersDaily?: number;
+    /**
+     * Websiteusersmonthly
+     */
+    websiteUsersMonthly?: number;
+    /**
+     * Totalregistered
+     */
+    totalRegistered?: number;
 };
 
 /**
@@ -104,6 +360,20 @@ export type UserResponse = {
      * Role
      */
     role: string;
+    /**
+     * Created At
+     */
+    created_at?: string | null;
+};
+
+/**
+ * UserStatusRequest
+ */
+export type UserStatusRequest = {
+    /**
+     * Is Active
+     */
+    is_active: boolean;
 };
 
 /**
@@ -174,14 +444,9 @@ export type ChangePasswordResponses = {
 };
 
 export type ChangeUsernameData = {
-    body?: never;
+    body: ChangeUsernameRequest;
     path?: never;
-    query: {
-        /**
-         * Username
-         */
-        username: string;
-    };
+    query?: never;
     url: '/api/v1/user/change-username';
 };
 
@@ -244,8 +509,10 @@ export type DeleteUserResponses = {
     /**
      * Successful Response
      */
-    200: unknown;
+    204: void;
 };
+
+export type DeleteUserResponse = DeleteUserResponses[keyof DeleteUserResponses];
 
 export type GetUserData = {
     body?: never;
@@ -276,6 +543,36 @@ export type GetUserResponses = {
 };
 
 export type GetUserResponse = GetUserResponses[keyof GetUserResponses];
+
+export type SetUserStatusData = {
+    body: UserStatusRequest;
+    path: {
+        /**
+         * User Id
+         */
+        user_id: number;
+    };
+    query?: never;
+    url: '/api/v1/user/{user_id}/status';
+};
+
+export type SetUserStatusErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type SetUserStatusError = SetUserStatusErrors[keyof SetUserStatusErrors];
+
+export type SetUserStatusResponses = {
+    /**
+     * Successful Response
+     */
+    200: UserResponse;
+};
+
+export type SetUserStatusResponse = SetUserStatusResponses[keyof SetUserStatusResponses];
 
 export type LoginData = {
     body: LoginRequest;
@@ -427,6 +724,230 @@ export type UploadSkinResponses = {
      */
     200: unknown;
 };
+
+export type GetStatsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/admin/stats';
+};
+
+export type GetStatsResponses = {
+    /**
+     * Successful Response
+     */
+    200: StatsResponse;
+};
+
+export type GetStatsResponse = GetStatsResponses[keyof GetStatsResponses];
+
+export type GetServerConfigData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/admin/server';
+};
+
+export type GetServerConfigResponses = {
+    /**
+     * Successful Response
+     */
+    200: ServerConfigSchema;
+};
+
+export type GetServerConfigResponse = GetServerConfigResponses[keyof GetServerConfigResponses];
+
+export type UpdateServerConfigData = {
+    body: ServerConfigSchema;
+    path?: never;
+    query?: never;
+    url: '/api/v1/admin/server';
+};
+
+export type UpdateServerConfigErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type UpdateServerConfigError = UpdateServerConfigErrors[keyof UpdateServerConfigErrors];
+
+export type UpdateServerConfigResponses = {
+    /**
+     * Successful Response
+     */
+    200: ServerConfigSchema;
+};
+
+export type UpdateServerConfigResponse = UpdateServerConfigResponses[keyof UpdateServerConfigResponses];
+
+export type GetModsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/admin/mods';
+};
+
+export type GetModsResponses = {
+    /**
+     * Response Get Mods Api V1 Admin Mods Get
+     *
+     * Successful Response
+     */
+    200: Array<ModEntry>;
+};
+
+export type GetModsResponse = GetModsResponses[keyof GetModsResponses];
+
+export type GetServerStatusData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/admin/status';
+};
+
+export type GetServerStatusResponses = {
+    /**
+     * Successful Response
+     */
+    200: ServerStatusResponse;
+};
+
+export type GetServerStatusResponse = GetServerStatusResponses[keyof GetServerStatusResponses];
+
+export type CreateArchiveData = {
+    body: ArchiveCreate;
+    path?: never;
+    query?: never;
+    url: '/api/v1/admin/archive';
+};
+
+export type CreateArchiveErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CreateArchiveError = CreateArchiveErrors[keyof CreateArchiveErrors];
+
+export type CreateArchiveResponses = {
+    /**
+     * Successful Response
+     */
+    201: ArchiveResponse;
+};
+
+export type CreateArchiveResponse = CreateArchiveResponses[keyof CreateArchiveResponses];
+
+export type DeleteArchiveData = {
+    body?: never;
+    path: {
+        /**
+         * Archive Id
+         */
+        archive_id: number;
+    };
+    query?: never;
+    url: '/api/v1/admin/archive/{archive_id}';
+};
+
+export type DeleteArchiveErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type DeleteArchiveError = DeleteArchiveErrors[keyof DeleteArchiveErrors];
+
+export type DeleteArchiveResponses = {
+    /**
+     * Successful Response
+     */
+    204: void;
+};
+
+export type DeleteArchiveResponse = DeleteArchiveResponses[keyof DeleteArchiveResponses];
+
+export type UpdateArchiveData = {
+    body: ArchiveCreate;
+    path: {
+        /**
+         * Archive Id
+         */
+        archive_id: number;
+    };
+    query?: never;
+    url: '/api/v1/admin/archive/{archive_id}';
+};
+
+export type UpdateArchiveErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type UpdateArchiveError = UpdateArchiveErrors[keyof UpdateArchiveErrors];
+
+export type UpdateArchiveResponses = {
+    /**
+     * Successful Response
+     */
+    200: ArchiveResponse;
+};
+
+export type UpdateArchiveResponse = UpdateArchiveResponses[keyof UpdateArchiveResponses];
+
+export type ListArchivesData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/archive';
+};
+
+export type ListArchivesResponses = {
+    /**
+     * Response List Archives Api V1 Archive Get
+     *
+     * Successful Response
+     */
+    200: Array<ArchiveResponse>;
+};
+
+export type ListArchivesResponse = ListArchivesResponses[keyof ListArchivesResponses];
+
+export type GetArchiveData = {
+    body?: never;
+    path: {
+        /**
+         * Archive Id
+         */
+        archive_id: number;
+    };
+    query?: never;
+    url: '/api/v1/archive/{archive_id}';
+};
+
+export type GetArchiveErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetArchiveError = GetArchiveErrors[keyof GetArchiveErrors];
+
+export type GetArchiveResponses = {
+    /**
+     * Successful Response
+     */
+    200: ArchiveResponse;
+};
+
+export type GetArchiveResponse = GetArchiveResponses[keyof GetArchiveResponses];
 
 export type HealthCheckGetData = {
     body?: never;

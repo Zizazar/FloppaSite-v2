@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta, timezone
-from curl_cffi import AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException, Response
 import jwt
 from sqlalchemy import select
@@ -24,7 +24,7 @@ def create_and_save_token(user_id: int, response: Response) -> str:
         key="access_token",
         value=token,
         httponly=True,
-        secure=False,
+        secure=not settings.DEBUG,
         samesite="lax",
         max_age=settings.JWT_EXPIRATION_MINUTES * 60,
         path="/"
@@ -38,15 +38,24 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 def get_password_hash(password: str) -> str:
     return pwd_context.hash(password)
 
+def decode_token(token: str) -> dict:
+    """Декодирует и валидирует JWT, возвращает payload. Бросает jwt-исключения."""
+    return jwt.decode(token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
+
 async def decode_and_get_user(db: AsyncSession, token: str):
     try:
-        payload = jwt.decode(token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
+        payload = decode_token(token)
         user_id = payload.get("user_id")
         if not user_id:
             raise HTTPException(status_code=401, detail="Invalid token")
     except jwt.InvalidTokenError:
-        raise HTTPException(status_code=401, detail="Invalid token") 
-    
+        raise HTTPException(status_code=401, detail="Invalid token")
+
     user = await db.scalar(select(User).filter(User.id == user_id))
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+    if not user.is_active:
+        raise HTTPException(status_code=403, detail="Account is banned")
 
     return user

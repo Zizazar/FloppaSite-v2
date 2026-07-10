@@ -6,6 +6,7 @@ export const CONFIG = {
   launcher: {
     exe: 'https://fllauncher.zizazr.art/FloppaLauncher.exe',
     jar: 'https://fllauncher.zizazr.art/FloppaLauncher.jar',
+    appimage: 'https://fllauncher.zizazr.art/FloppaLand.AppImage',
   },
   discord: {
     serverId: '959163119517716511',

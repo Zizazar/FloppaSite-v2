@@ -39,3 +39,8 @@ class Settings(BaseSettings):
         case_sensitive = True
 
 settings = Settings()
+
+if not settings.DEBUG and settings.JWT_SECRET_KEY == "your-secret-key-change-me-in-production":
+    raise RuntimeError(
+        "JWT_SECRET_KEY не задан: в продакшене (DEBUG=False) укажите его в .env"
+    )
