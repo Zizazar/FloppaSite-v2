@@ -34,7 +34,7 @@ async def get_user_or_current(
     
     raise HTTPException(status_code=401, detail="Not Authorized")
 
-@router.get("/")
+@router.get("")
 async def get_skin_by_name(
     name: Optional[str] = None,
     uuid: Optional[str] = None,

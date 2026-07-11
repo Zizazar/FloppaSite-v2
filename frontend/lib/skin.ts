@@ -7,7 +7,7 @@ const SKIN_BASE = '/api/v1/skin';
 
 /** Полный скин игрока (PNG 64x64 / 64x32). */
 export function skinUrl(name?: string | null): string {
-  return `${SKIN_BASE}/?name=${encodeURIComponent(name ?? '')}`;
+  return `${SKIN_BASE}?name=${encodeURIComponent(name ?? '')}`;
 }
 
 /**
